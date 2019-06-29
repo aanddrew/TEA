@@ -14,6 +14,7 @@ struct Buffer
 	char ** rows;
 	int numRows;
 	int maxRows;
+	int* lengths;
 	int* maxLengths;
 	//we will just hold the file in a big 2d array of strings
 };

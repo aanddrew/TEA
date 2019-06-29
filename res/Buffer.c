@@ -7,6 +7,10 @@ struct Buffer* createBuffer(const char* fileName)
 {
 	struct Buffer* buffer = (struct Buffer*) malloc(sizeof(struct Buffer));
 	buffer->file = fopen(fileName, "r+");
+	//if file doesn't open, return null
+	if (buffer->file == NULL)
+		return NULL;
+
 	buffer->fileName = malloc(sizeof(char) * strlen(fileName));
 	//copy the fileName to our buffer object
 	strcpy(buffer->fileName, fileName);
@@ -33,8 +37,9 @@ struct Buffer* createBuffer(const char* fileName)
 
 
 	}//end calculating rows.
-	buffer->rows = (char**) malloc(sizeof(char*) * buffer->maxRows);
+	buffer->rows = (char**) malloc(sizeof(char*) * buffer->maxRows);	
 	buffer->maxLengths = (int*) malloc(sizeof(int) * buffer->maxRows);
+	buffer->lengths = (int*) malloc(sizeof(int) * buffer->maxRows);
 
 	for(int i = 0; i < buffer->maxRows; i++)
 	{
@@ -55,6 +60,7 @@ struct Buffer* createBuffer(const char* fileName)
 			tempLine[i-1] = '\0';
 			buffer->rows[r] = (char*) malloc(sizeof(char) * i);
 			buffer->maxLengths[r] = i;
+			buffer->lengths[r] = i;
 			int x = 0;
 			for(; tempLine[x] != '\0'; x++)
 			{
@@ -109,7 +115,7 @@ bool shiftStringBackward(char* string, int start)
 bool deleteFromString(char* string, int start)
 {
 	int len = strlen(string);
-	if (start > len)
+	if (start >= len + 1)
 		return false;
 
 	for(int i = start-1; i < len; i++)
@@ -146,7 +152,7 @@ int shiftStringForward(char** string, int maxLength, int start)
 		}
 		//then we put the rest at the end
 		int i = start;
-		for(; i < size; i++)
+		for(; i <= size; i++)
 		{
 			newString[i + 1] = (*string)[i];
 		}
@@ -194,17 +200,21 @@ bool insertIntoBuffer(struct Buffer* buffer, int r, int c, char inserted)
 			shiftStringForward(&(buffer->rows[r]), buffer->maxLengths[r], c);
 		buffer->rows[r][c] = inserted;
 	}
+
+	buffer->lengths[r]++;
 	return true;
 }
 
 bool backspace(struct Buffer* buffer, int r, int c)
 {
 	return shiftStringBackward(buffer->rows[r], c);
+	buffer->lengths[r]--;
 }
 
 bool del(struct Buffer* buffer, int r, int c)
 {
 	return deleteFromString(buffer->rows[r], c);
+	buffer->lengths[r]--;
 }
 
 bool deleteRow(struct Buffer* buffer, int r)
@@ -239,11 +249,13 @@ bool addRow(struct Buffer* buffer, int r)
 		buffer->rows[r+1] = (char*) malloc(sizeof(char)*80);
 		buffer->rows[r+1][0] = '\0';
 		buffer->maxLengths[r+1] = 80;
+		buffer->lengths[r+1] = 0;
 		//count down
 		for(int i = buffer->numRows; i > r+1; i--)
 		{
 			buffer->rows[i] = copyOfOldRows[i-1];
 			buffer->maxLengths[i] = buffer->maxLengths[i-1];
+			buffer->lengths[i] = buffer->lengths[i-1];
 		}
 
 		buffer->numRows++;
@@ -265,11 +277,13 @@ bool addRow(struct Buffer* buffer, int r)
 		buffer->rows[r+1] = (char*) malloc(sizeof(char)*80);
 		buffer->rows[r+1][0] = '\0';
 		buffer->maxLengths[r+1] = 80;
+		buffer->lengths[r+1] = 0;
 		//count down
 		for(int i = buffer->numRows; i > r+1; i--)
 		{
 			buffer->rows[i] = copyOfOldRows[i-1];
 			buffer->maxLengths[i] = buffer->maxLengths[i-1];
+			buffer->lengths[i] = buffer->lengths[i-1];
 		}
 
 		buffer->numRows++;

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
@@ -33,7 +34,17 @@ int main(int argc, char** argv)
 	SDL_GLContext context = SDL_GL_CreateContext(window);
 	//end window creation
 	
-	struct Buffer* buffer = createBuffer("test.txt");
+	struct Buffer* buffer;
+	if (argc == 1)
+		buffer = createBuffer("test.txt");
+	else
+		buffer = createBuffer(argv[1]);
+
+	if (buffer == NULL)
+	{
+		fprintf(stderr, "Could not open file: %s, exiting.\n", argv[1]);
+		return 1;
+	}
 
 	printf("buffer info: \n");
 	printf("File: %s\n", buffer->fileName);
@@ -42,6 +53,12 @@ int main(int argc, char** argv)
 	{
 		printf("%s\n", buffer->rows[i]);
 	}
+
+	// char* windowTitle = strcat("TEA - ", buffer->fileName);
+	char windowTitle[80];
+	strcat(windowTitle, "TEA - ");
+	strcat(windowTitle, buffer->fileName);
+	SDL_SetWindowTitle(window, windowTitle);
 	
 	//starting events
 	int done = 0;
@@ -51,8 +68,20 @@ int main(int argc, char** argv)
 	int cursorR = 0;
 	int cursorC = 0;
 
+	// clock_t start = clock();
+	clock_t start, end, total;
+	clock_t dt;
+	int timeMs = 0;
 	while(!done)
 	{	
+		dt = ((double)(end - start)) / CLOCKS_PER_SEC;
+		// printf("%lf\n", total);
+		start = clock();
+		timeMs += (dt * 1000000);
+
+		// printf("%d\n", (int)(clock));
+
+		printf("%d\n", dt);
 		while(SDL_PollEvent(&e))
 		{
 			switch(e.type)
@@ -83,7 +112,7 @@ int main(int argc, char** argv)
 								cursorC--;
 						break;
 						case SDLK_DELETE:
-							del(buffer, cursorR, cursorC);
+							del(buffer, cursorR, cursorC+1);
 						break;
 						case SDLK_RETURN:
 							addRow(buffer, cursorR);
@@ -111,6 +140,7 @@ int main(int argc, char** argv)
 		renderBufferToTerminal(buffer);
 
 		SDL_GL_SwapWindow(window);
+		end = clock();
 	}
 
 	
@@ -131,8 +161,8 @@ SDL_Window* init()
 	SDL_Window* window = SDL_CreateWindow
 	(
 		"TEA", 
-		SDL_WINDOWPOS_UNDEFINED, 
-		SDL_WINDOWPOS_UNDEFINED, 
+		0, 
+		0, 
 		SCREEN_WIDTH, 
 		SCREEN_HEIGHT, 
 		SDL_WINDOW_OPENGL
@@ -149,6 +179,12 @@ void renderBufferToTerminal(struct Buffer* buffer)
 	printf("Num Rows: %d, Max Rows: %d\n", buffer->numRows, buffer->maxRows);
 	for(int i = 0; i < buffer->numRows; i++)
 	{
-		printf("SIZE: %d |%s\n",buffer->maxLengths[i], buffer->rows[i]);
+		printf("SIZE: %d |", buffer->maxLengths[i]);
+		for(int k = 0; k < buffer->lengths[i]; k++)
+		{
+			printf("%c", buffer->rows[i][k]);
+		}
+		printf("\n");
 	}
+
 }
