@@ -115,7 +115,7 @@ bool shiftStringBackward(char* string, int start, int length)
 bool deleteFromString(char* string, int start, int length)
 {
 	// int len = strlen(string);
-	if (start >= length -1 || length == 0)
+	if (start >= length + 1 || length == 0)
 		return false;
 
 	for(int i = start-1; i < length; i++)
@@ -217,7 +217,7 @@ bool backspace(struct Buffer* buffer, int r, int c)
 
 bool del(struct Buffer* buffer, int r, int c)
 {
-	if (deleteFromString(buffer->rows[r], c, --buffer->lengths[r]))
+	if (deleteFromString(buffer->rows[r], c, buffer->lengths[r]))
 	{
 		buffer->lengths[r]--;
 		return true;
