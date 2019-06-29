@@ -179,7 +179,7 @@ void renderBufferToTerminal(struct Buffer* buffer)
 	printf("Num Rows: %d, Max Rows: %d\n", buffer->numRows, buffer->maxRows);
 	for(int i = 0; i < buffer->numRows; i++)
 	{
-		printf("SIZE: %d |", buffer->maxLengths[i]);
+		printf("MAX_SIZE: %d , length: %d |", buffer->maxLengths[i], buffer->lengths[i]);
 		for(int k = 0; k < buffer->lengths[i]; k++)
 		{
 			printf("%c", buffer->rows[i][k]);

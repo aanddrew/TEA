@@ -98,13 +98,13 @@ struct Buffer* createBuffer(const char* fileName)
 }
 
 //returns true if the start is greater than 0 and less than the strlen(string)
-bool shiftStringBackward(char* string, int start)
+bool shiftStringBackward(char* string, int start, int length)
 {
-	int len = strlen(string);
-	if (start == 0 || start > len)
+	// int len = strlen(string);
+	if (start == 0 || start > length)
 		return false;
 
-	for(int i = start-1; i < len; i++)
+	for(int i = start-1; i < length; i++)
 	{
 		string[i] = string[i+1];
 		//this will bring the null character backwards too
@@ -112,13 +112,13 @@ bool shiftStringBackward(char* string, int start)
 	return true;
 }
 
-bool deleteFromString(char* string, int start)
+bool deleteFromString(char* string, int start, int length)
 {
-	int len = strlen(string);
-	if (start >= len + 1)
+	// int len = strlen(string);
+	if (start >= length -1 || length == 0)
 		return false;
 
-	for(int i = start-1; i < len; i++)
+	for(int i = start-1; i < length; i++)
 	{
 		string[i] = string[i+1];
 		//this will bring the null character backwards too
@@ -207,14 +207,22 @@ bool insertIntoBuffer(struct Buffer* buffer, int r, int c, char inserted)
 
 bool backspace(struct Buffer* buffer, int r, int c)
 {
-	return shiftStringBackward(buffer->rows[r], c);
-	buffer->lengths[r]--;
+	if (shiftStringBackward(buffer->rows[r], c, buffer->lengths[r]))
+	{
+		buffer->lengths[r]--;
+		return true;
+	}
+	return false;
 }
 
 bool del(struct Buffer* buffer, int r, int c)
 {
-	return deleteFromString(buffer->rows[r], c);
-	buffer->lengths[r]--;
+	if (deleteFromString(buffer->rows[r], c, --buffer->lengths[r]))
+	{
+		buffer->lengths[r]--;
+		return true;
+	}
+	return false;
 }
 
 bool deleteRow(struct Buffer* buffer, int r)
@@ -303,6 +311,7 @@ void destroyBuffer(struct Buffer* buffer)
 	}
 	free(buffer->rows);
 	free(buffer->fileName);
+	free(buffer->lengths);
 	free(buffer->maxLengths);
 
 	fclose(buffer->file);
