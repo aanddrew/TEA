@@ -1,5 +1,5 @@
 #the files to compile as part of project
-OBJS = main.c res/*.c
+OBJS = main.c src/*.c graphics/src/*.c
 
 #the compiler we will use
 CC = gcc

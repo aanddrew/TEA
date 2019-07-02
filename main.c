@@ -6,6 +6,7 @@
 
 #include "include/Buffer.h"
 #include "include/Input.h"
+#include "graphics/include/bmploader.h"
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
@@ -26,12 +27,52 @@ int main(int argc, char** argv)
 
 	//WINDOW CREATION
 	SDL_Window* window = init();
+
 	if (window == NULL)
 	{
 		fprintf(stderr, "Error, could not init SDL\n");
 		return 1;
 	}
 	SDL_GLContext context = SDL_GL_CreateContext(window);
+	//give it an icon
+	unsigned int logoWidth, logoHeight;
+	unsigned char* logoPixels = loadbmp("res/logo.bmp", &logoWidth, &logoHeight);
+
+	printf("logo is %ux%u\n", logoWidth, logoHeight);
+
+	// srand(0);
+	// for(int i = 0; i < 64*64 * 4; i++)
+	// {
+	// 	logoPixels[i] = rand()%255;
+	// }
+
+	SDL_Surface* logoSurface = SDL_CreateRGBSurfaceFrom(
+		logoPixels,
+		logoWidth,
+		logoHeight,
+		32,//32 bit color
+		logoWidth*4,//width pixels * 4 bytes long
+		0xff000000, //rmask
+		0x00ff0000, //gmask
+		0x0000ff00, //bmask
+		0x000000ff  //amask
+		);
+	SDL_SetWindowIcon(window, logoSurface);
+
+	for(int y = 0; y < 64; y++)
+	{
+		for (int x = 0; x < 64; x++)
+		{
+			printf("%x", (unsigned int)(logoPixels[y*4*64 + x*4]));
+			// printf("%c", (logoPixels[y*4*64 + x*4] == 0 ? ' ' : 'A'));
+		}
+		printf("\n");
+	}
+	// for(int i = 0; i < 64*64*4; i++)
+	// {
+	// 	printf("%x", logoPixels[i]);
+	// }
+	printf("\n");
 	//end window creation
 	
 	struct Buffer* buffer;
@@ -55,8 +96,7 @@ int main(int argc, char** argv)
 	}
 
 	// char* windowTitle = strcat("TEA - ", buffer->fileName);
-	char windowTitle[80];
-	strcat(windowTitle, "TEA - ");
+	char windowTitle[80] = "Tea - ";
 	strcat(windowTitle, buffer->fileName);
 	SDL_SetWindowTitle(window, windowTitle);
 	
@@ -68,20 +108,8 @@ int main(int argc, char** argv)
 	int cursorR = 0;
 	int cursorC = 0;
 
-	// clock_t start = clock();
-	clock_t start, end, total;
-	clock_t dt;
-	int timeMs = 0;
 	while(!done)
 	{	
-		dt = ((double)(end - start)) / CLOCKS_PER_SEC;
-		// printf("%lf\n", total);
-		start = clock();
-		timeMs += (dt * 1000000);
-
-		// printf("%d\n", (int)(clock));
-
-		printf("%d\n", dt);
 		while(SDL_PollEvent(&e))
 		{
 			switch(e.type)
@@ -137,15 +165,17 @@ int main(int argc, char** argv)
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		//rendering takes place here
-		renderBufferToTerminal(buffer);
+		// renderBufferToTerminal(buffer);
 
 		SDL_GL_SwapWindow(window);
-		end = clock();
 	}
 
 	
+	free(logoPixels);
 	destroyBuffer(buffer);
+	SDL_FreeSurface(logoSurface);
 	SDL_DestroyWindow(window);
+
 	SDL_Quit();
 
 	return 0;
