@@ -70,23 +70,28 @@ void fixPixelsForSDL(unsigned char* pixels, unsigned int width, unsigned int hei
 {
 	unsigned int arrSize = width*height*4;
 
-	// for(int y = 0; y < height*4/2; y++)
-	// {
-	// 	for (int x = 0; x < width*4; x++)
-	// 	{
-	// 		unsigned char temp = pixels[y*width + x];
-	// 		pixels[y*width + x] = pixels[(height*4 - y)*width + x];
-	// 		pixels[(height*4 - y)*width + x] = temp;
-	// 	}
-	// }
-
-	for(int i = 0; i < arrSize/2; i++)
+//reverse across diagonal axis
+	for(int i = 0; i < arrSize/8; i++)
 	{
-		unsigned char temp = pixels[i];
-		pixels[i] = pixels[arrSize - i];
-		pixels[arrSize - i] = temp;
+		for(int j = 0; j < 4; j++)
+		{
+			unsigned char temp = pixels[i*4 + j];
+			pixels[i*4 + j] = pixels[arrSize - i*4 + j];
+			pixels[arrSize - i*4 + j] = temp;
+		}	
 	}
-
-	//it is no longer upside down, now let's flip it horizontally}
+//reverse along vertical axis
+	for(int y = 0; y < height; y++)
+	{
+		for(int x = 0; x < width/2; x++)
+		{
+			for(int k = 0; k < 4; k++)
+			{
+				unsigned char temp = pixels[y*width*4 + x*4 + k];
+				pixels[y*width*4 + x*4 + k] = pixels[y*width*4 + width*4 - x*4 + k];
+				pixels[y*width*4 + width*4 - x*4 + k] = temp;
+			}
+		}
+	}
 
 }
