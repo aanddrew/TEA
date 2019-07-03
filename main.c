@@ -36,8 +36,7 @@ int main(int argc, char** argv)
 	SDL_GLContext context = SDL_GL_CreateContext(window);
 	//give it an icon
 	unsigned int logoWidth, logoHeight;
-	unsigned char* logoPixels = loadbmp("res/logo.bmp", &logoWidth, &logoHeight);
-
+	unsigned char* logoPixels = loadbmp("res/icon_256.bmp", &logoWidth, &logoHeight);
 	fixPixelsForSDL(logoPixels, logoWidth, logoHeight);
 
 	printf("logo is %ux%u\n", logoWidth, logoHeight);
@@ -54,21 +53,6 @@ int main(int argc, char** argv)
 		0x000000ff  //amask
 		);
 	SDL_SetWindowIcon(window, logoSurface);
-
-	for(int y = 0; y < 64; y++)
-	{
-		for (int x = 0; x < 64; x++)
-		{
-			printf("%s", (unsigned int)(logoPixels[y*4*64 + x*4]) == 0 ? " " : "f");
-			// printf("%c", (logoPixels[y*4*64 + x*4] == 0 ? ' ' : 'A'));
-		}
-		printf("\n");
-	}
-	// for(int i = 0; i < 64*64*4; i++)
-	// {
-	// 	printf("%x", logoPixels[i]);
-	// }
-	printf("\n");
 	//end window creation
 	
 	struct Buffer* buffer;
@@ -92,7 +76,7 @@ int main(int argc, char** argv)
 	}
 
 	// char* windowTitle = strcat("TEA - ", buffer->fileName);
-	char windowTitle[80] = "Tea - ";
+	char windowTitle[80] = "tea - ";
 	strcat(windowTitle, buffer->fileName);
 	SDL_SetWindowTitle(window, windowTitle);
 	
