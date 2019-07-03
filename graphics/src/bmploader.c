@@ -44,7 +44,13 @@ unsigned char* loadbmp(const char* fileName, unsigned int* width, unsigned int* 
 	fseek(file, 14+8, SEEK_SET);
 	fread(height, sizeof(unsigned int), 1, file);
 
-	fseek(file, 0, SEEK_SET);
+	unsigned int offset;
+	fseek(file, 10, SEEK_SET);
+	fread(&offset, 4, 1, file);
+
+	printf("offset is %u\n", offset);
+
+	fseek(file, offset, SEEK_SET);
 
 	//allocate width times height pixels
 	unsigned int BYTES_PER_PIXEL = 4; //32 bit color - rgba assumed
@@ -58,4 +64,29 @@ unsigned char* loadbmp(const char* fileName, unsigned int* width, unsigned int* 
 	fclose(file);
 
 	return pixels;
+}
+
+void fixPixelsForSDL(unsigned char* pixels, unsigned int width, unsigned int height)
+{
+	unsigned int arrSize = width*height*4;
+
+	// for(int y = 0; y < height*4/2; y++)
+	// {
+	// 	for (int x = 0; x < width*4; x++)
+	// 	{
+	// 		unsigned char temp = pixels[y*width + x];
+	// 		pixels[y*width + x] = pixels[(height*4 - y)*width + x];
+	// 		pixels[(height*4 - y)*width + x] = temp;
+	// 	}
+	// }
+
+	for(int i = 0; i < arrSize/2; i++)
+	{
+		unsigned char temp = pixels[i];
+		pixels[i] = pixels[arrSize - i];
+		pixels[arrSize - i] = temp;
+	}
+
+	//it is no longer upside down, now let's flip it horizontally}
+
 }

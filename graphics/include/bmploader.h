@@ -9,5 +9,6 @@
 // };
 
 unsigned char* loadbmp(const char* fileName, unsigned int* width, unsigned int* height);
+void fixPixelsForSDL(unsigned char* pixels, unsigned int width, unsigned int height);
 
 #endif

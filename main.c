@@ -8,8 +8,8 @@
 #include "include/Input.h"
 #include "graphics/include/bmploader.h"
 
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
 
 SDL_Window* init();
 void renderBufferToTerminal(struct Buffer* buffer);
@@ -38,13 +38,9 @@ int main(int argc, char** argv)
 	unsigned int logoWidth, logoHeight;
 	unsigned char* logoPixels = loadbmp("res/logo.bmp", &logoWidth, &logoHeight);
 
-	printf("logo is %ux%u\n", logoWidth, logoHeight);
+	fixPixelsForSDL(logoPixels, logoWidth, logoHeight);
 
-	// srand(0);
-	// for(int i = 0; i < 64*64 * 4; i++)
-	// {
-	// 	logoPixels[i] = rand()%255;
-	// }
+	printf("logo is %ux%u\n", logoWidth, logoHeight);
 
 	SDL_Surface* logoSurface = SDL_CreateRGBSurfaceFrom(
 		logoPixels,
@@ -63,7 +59,7 @@ int main(int argc, char** argv)
 	{
 		for (int x = 0; x < 64; x++)
 		{
-			printf("%x", (unsigned int)(logoPixels[y*4*64 + x*4]));
+			printf("%s", (unsigned int)(logoPixels[y*4*64 + x*4]) == 0 ? " " : "f");
 			// printf("%c", (logoPixels[y*4*64 + x*4] == 0 ? ' ' : 'A'));
 		}
 		printf("\n");
