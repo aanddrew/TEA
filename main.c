@@ -58,7 +58,7 @@ int main(int argc, char** argv)
 	//end window creation
 
 	SDL_Surface* windowSurface = SDL_GetWindowSurface(window);
-	SDL_Renderer* windowRenderer = SDL_CreateRenderer(window, -1, 0);
+	SDL_Renderer* windowRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
 
 	//load fonts
 	initFont();
@@ -136,6 +136,49 @@ int main(int argc, char** argv)
 							cursorR++;
 							cursorC = 0;
 						break;
+						case SDLK_LEFT:
+							if (cursorC ==0)
+							{
+								if (cursorR != 0)
+								{
+									cursorR--;
+									cursorC = buffer->lengths[cursorR] - 1;
+								}
+							}
+							else
+							{
+								cursorC--;
+							}
+						break;
+						case SDLK_RIGHT:
+							if (cursorC == buffer->lengths[cursorR] - 1)
+							{
+								cursorR++;
+								cursorC = 0;
+							}
+							else
+							{
+								cursorC++;
+							}
+						break;
+						case SDLK_UP:
+							if (cursorR != 0)
+							{
+								cursorR--;
+								cursorC = (cursorC >= buffer->lengths[cursorR]?
+									buffer->lengths[cursorR] :
+									cursorC);
+							}
+						break;
+						case SDLK_DOWN:
+							if (cursorR != buffer->maxRows - 1)
+							{
+								cursorR++;
+								cursorC = (cursorC > buffer->lengths[cursorR] - 1 ?
+									buffer->lengths[cursorR] - 1 :
+									cursorC);
+							}
+						break;
 					}
 				}
 				break;
@@ -211,24 +254,26 @@ SDL_Window* init()
 void renderBufferToRenderer(struct Buffer* buffer, SDL_Renderer* dst, 
 	int cursorR, int cursorC, int scrollRows, int scrollCols)
 {
-	static const int BLINK_LENGTH = 600;
+	static const int BLINK_LENGTH = 30;
 	static int numTicks = 0;
 	if (numTicks > BLINK_LENGTH)
 		numTicks = 0;
 	else
 		numTicks++;
 
-	printf("%d, %d\n", buffer->numRows, buffer->maxRows);
+	// printf("%d, %d\n", buffer->numRows, buffer->maxRows);
 
 	for(unsigned int r = 0; r < buffer->numRows; r++)
 	{
 		for(unsigned int c = 0; c < buffer->lengths[r]; c++)
 		{
-			if (numTicks <= BLINK_LENGTH/2 && r == cursorR && c == cursorC)
-				continue;
-
 			drawGlyph(buffer->rows[r][c], r, c, dst);
 		}
+	}
+
+	if (numTicks <= BLINK_LENGTH/2)
+	{
+		drawGlyph('_', cursorR, cursorC, dst);
 	}
 }
 

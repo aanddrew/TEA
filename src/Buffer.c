@@ -57,37 +57,32 @@ struct Buffer* createBuffer(const char* fileName)
 	{
 		if (tempLine[i-1] == '\n')
 		{
-			tempLine[i-1] = '\0';
 			buffer->rows[r] = (char*) malloc(sizeof(char) * i);
 			buffer->maxLengths[r] = i;
 			buffer->lengths[r] = i;
 			int x = 0;
-			for(; tempLine[x] != '\0'; x++)
+			for(; x < i; x++)
 			{
 				buffer->rows[r][x] = tempLine[x];
 			}
-			buffer->rows[r][x] = '\0';
 
 			r++;
 			i = 0;
 		}
-
 
 		tempLine[i] = c;
 		c = fgetc(buffer->file);
 		i++;
 	}
 	//grab the last line of the file
-	tempLine[i] = '\0';
 	buffer->rows[r] = (char*) malloc(sizeof(char) * i);
 	buffer->maxLengths[r] = i;
 	buffer->lengths[r] = i;
 	int x = 0;
-	for(; tempLine[x] != '\0'; x++)
+	for(; x < i; x++)
 	{
 		buffer->rows[r][x] = tempLine[x];
 	}
-	buffer->rows[r][x] = '\0';
 	r++;
 
 	buffer->numRows = r;
@@ -159,8 +154,6 @@ int shiftStringForward(char** string, int maxLength, int start)
 			newString[i + 1] = (*string)[i];
 		}
 
-		newString[newMaxLength-1] = '\0';
-
 		//remove the old one
 		free(*string);
 		*string = newString;	
@@ -194,7 +187,6 @@ bool insertIntoBuffer(struct Buffer* buffer, int r, int c, char inserted)
 		}
 
 		buffer->rows[r][c] = inserted;
-		buffer->rows[r][c+1] = '\0';
 	}
 	else
 	{
@@ -250,6 +242,8 @@ bool addRow(struct Buffer* buffer, int r)
 
 		buffer->rows = (char**) malloc(sizeof(char*) * newMaxRows);
 
+		printf("old %p, rows %p\n", copyOfOldRows, buffer->rows);
+
 		//count up
 		for(int i = 0; i < r+1; i++)
 		{
@@ -257,8 +251,6 @@ bool addRow(struct Buffer* buffer, int r)
 		}
 		//in the middle
 		buffer->rows[r+1] = (char*) malloc(sizeof(char)*80);
-		buffer->maxLengths[r+1] = 80;
-		buffer->lengths[r+1] = 0;
 		//count down
 		for(int i = buffer->numRows; i > r+1; i--)
 		{
@@ -266,6 +258,9 @@ bool addRow(struct Buffer* buffer, int r)
 			buffer->maxLengths[i] = buffer->maxLengths[i-1];
 			buffer->lengths[i] = buffer->lengths[i-1];
 		}
+
+		buffer->maxLengths[r+1] = 80;
+		buffer->lengths[r+1] = 0;
 
 		buffer->numRows++;
 		buffer->maxRows = newMaxRows;
@@ -284,9 +279,6 @@ bool addRow(struct Buffer* buffer, int r)
 		}
 		//in the middle
 		buffer->rows[r+1] = (char*) malloc(sizeof(char)*80);
-		buffer->rows[r+1][0] = '\0';
-		buffer->maxLengths[r+1] = 80;
-		buffer->lengths[r+1] = 0;
 		//count down
 		for(int i = buffer->numRows; i > r+1; i--)
 		{
@@ -295,7 +287,15 @@ bool addRow(struct Buffer* buffer, int r)
 			buffer->lengths[i] = buffer->lengths[i-1];
 		}
 
+		buffer->maxLengths[r+1] = 80;
+		buffer->lengths[r+1] = 0;
+
 		buffer->numRows++;
+	}
+
+	for(int i = buffer->numRows; i < buffer->maxRows; i++)
+	{
+		buffer->rows[i] = NULL;
 	}
 }
 

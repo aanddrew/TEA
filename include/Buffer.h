@@ -10,7 +10,7 @@ struct Buffer
 	char* fileName;
 	// char* encoding;
 
-	//array of strings - null terminated, no newline characters
+	//array of strings, not null terminated, lines end in 
 	char ** rows;
 	int numRows;
 	int maxRows;
@@ -23,10 +23,10 @@ struct Buffer* createBuffer(const char* fileName);
 
 //manipulation of buffer
 bool insertIntoBuffer(struct Buffer* buffer, int r, int c, char inserted);
-bool backspace(struct Buffer* buffer, int r, int c);
-bool del(struct Buffer* buffer, int r, int c);
 bool addRow(struct Buffer* buffer, int r);
 bool deleteRow(struct Buffer* buffer, int r);
+bool backspace(struct Buffer* buffer, int r, int c);
+bool del(struct Buffer* buffer, int r, int c);
 
 void destroyBuffer(struct Buffer* buffer);
 
