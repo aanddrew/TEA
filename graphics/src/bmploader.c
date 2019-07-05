@@ -7,6 +7,7 @@
 #define WORD unsigned short
 #define DWORD unsigned int
 
+//this is deprecated, should be refactored
 struct BITMAPFILEHEADER
 {
     WORD bfType;  //specifies the file type
@@ -33,8 +34,6 @@ unsigned char* loadbmp(const char* fileName, unsigned int* width, unsigned int* 
 	DWORD DIBHeaderSize;
 	fseek(file, 14, SEEK_SET);
 	fread(&DIBHeaderSize, sizeof(DWORD), 1, file);
-
-	printf("pixels start at: %u\n", fileHeader.bfOffBits);
 
 	//get the width which is 4 bytes from the file header
 	fseek(file, 14 + 4, SEEK_SET);
@@ -80,7 +79,7 @@ void fixPixelsForSDL(unsigned char* pixels, unsigned int width, unsigned int hei
 			pixels[arrSize - i*4 + j] = temp;
 		}	
 	}
-//reverse along vertical axis
+//reverse along vertical 
 	for(int y = 0; y < height; y++)
 	{
 		for(int x = 0; x < width/2; x++)

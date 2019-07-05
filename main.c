@@ -7,16 +7,19 @@
 #include "include/Buffer.h"
 #include "include/Input.h"
 #include "graphics/include/bmploader.h"
+#include "graphics/include/font.h"
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
 SDL_Window* init();
 void renderBufferToTerminal(struct Buffer* buffer);
+void renderBufferToRenderer(struct Buffer* buffer, SDL_Renderer* dst, 
+	int cursorR, int cursorC, int scrollRows, int scrollCols);
 
 int main(int argc, char** argv)
 {
-	printf("Welcome to TEA - the Text Editor by Andrew\n~~\n");
+	printf("Welcome to TEA - the Text Editor for Armadillos\n~~\n");
 	
 	if (argc > 2)
 	{
@@ -33,13 +36,12 @@ int main(int argc, char** argv)
 		fprintf(stderr, "Error, could not init SDL\n");
 		return 1;
 	}
-	SDL_GLContext context = SDL_GL_CreateContext(window);
 	//give it an icon
 	unsigned int logoWidth, logoHeight;
 	unsigned char* logoPixels = loadbmp("res/icon_256.bmp", &logoWidth, &logoHeight);
 	fixPixelsForSDL(logoPixels, logoWidth, logoHeight);
 
-	printf("logo is %ux%u\n", logoWidth, logoHeight);
+	printf("icon is %ux%u\n", logoWidth, logoHeight);
 
 	SDL_Surface* logoSurface = SDL_CreateRGBSurfaceFrom(
 		logoPixels,
@@ -54,6 +56,14 @@ int main(int argc, char** argv)
 		);
 	SDL_SetWindowIcon(window, logoSurface);
 	//end window creation
+
+	SDL_Surface* windowSurface = SDL_GetWindowSurface(window);
+	SDL_Renderer* windowRenderer = SDL_CreateRenderer(window, -1, 0);
+
+	//load fonts
+	initFont();
+
+	//=============DONE WITH INITIALIZATION==============
 	
 	struct Buffer* buffer;
 	if (argc == 1)
@@ -109,7 +119,6 @@ int main(int argc, char** argv)
 					char c = getCharFromSDLCode(keyCode, shift);
 					if (c != '\0')
 					{
-						printf("%c\n", c);
 						insertIntoBuffer(buffer, cursorR, cursorC++, c);
 					}
 
@@ -141,17 +150,21 @@ int main(int argc, char** argv)
 			}
 		}
 		//render loop
-		glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		SDL_RenderClear(windowRenderer);
+		// glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
+		// glClear(GL_COLOR_BUFFER_BIT);
 
 		//rendering takes place here
 		// renderBufferToTerminal(buffer);
+		renderBufferToRenderer(buffer, windowRenderer, cursorR, cursorC, 0, 0);
 
-		SDL_GL_SwapWindow(window);
+		// SDL_GL_SwapWindow(window);
+		SDL_RenderPresent(windowRenderer);
 	}
 
 	
 	free(logoPixels);
+	cleanUpFont();
 	destroyBuffer(buffer);
 	SDL_FreeSurface(logoSurface);
 	SDL_DestroyWindow(window);
@@ -168,18 +181,55 @@ SDL_Window* init()
 		return NULL;
 	}
 
+	// SDL_GL_SetSwapInterval(1);
+
+	// SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_CORE);
+	// SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,3);
+	// SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,3);
+
+	// SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
 	SDL_Window* window = SDL_CreateWindow
 	(
-		"TEA", 
+		"tea", 
 		0, 
 		0, 
 		SCREEN_WIDTH, 
 		SCREEN_HEIGHT, 
 		SDL_WINDOW_OPENGL
 	);
-	SDL_GL_SetSwapInterval(1);
+
+	// SDL_GLContext context = SDL_GL_CreateContext(window);
+
+	//this is critical, seg fault happens without it
+	// glewExperimental = GL_TRUE; 
+	// glewInit();
 
 	return window;
+}
+
+void renderBufferToRenderer(struct Buffer* buffer, SDL_Renderer* dst, 
+	int cursorR, int cursorC, int scrollRows, int scrollCols)
+{
+	static const int BLINK_LENGTH = 600;
+	static int numTicks = 0;
+	if (numTicks > BLINK_LENGTH)
+		numTicks = 0;
+	else
+		numTicks++;
+
+	printf("%d, %d\n", buffer->numRows, buffer->maxRows);
+
+	for(unsigned int r = 0; r < buffer->numRows; r++)
+	{
+		for(unsigned int c = 0; c < buffer->lengths[r]; c++)
+		{
+			if (numTicks <= BLINK_LENGTH/2 && r == cursorR && c == cursorC)
+				continue;
+
+			drawGlyph(buffer->rows[r][c], r, c, dst);
+		}
+	}
 }
 
 void renderBufferToTerminal(struct Buffer* buffer)

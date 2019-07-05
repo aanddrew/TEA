@@ -12,7 +12,7 @@ COMPILER_FLAGS = -g -std=c99
 LINKER_FLAGS = -lSDL2 -lGL -lGLEW
 
 #the name of our executable
-OBJ_NAME = a.out
+OBJ_NAME = tea
 
 all:
 	$(CC) $(OBJS) $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $(OBJ_NAME)

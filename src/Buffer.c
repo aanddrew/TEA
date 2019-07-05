@@ -80,6 +80,8 @@ struct Buffer* createBuffer(const char* fileName)
 	//grab the last line of the file
 	tempLine[i] = '\0';
 	buffer->rows[r] = (char*) malloc(sizeof(char) * i);
+	buffer->maxLengths[r] = i;
+	buffer->lengths[r] = i;
 	int x = 0;
 	for(; tempLine[x] != '\0'; x++)
 	{
@@ -255,7 +257,6 @@ bool addRow(struct Buffer* buffer, int r)
 		}
 		//in the middle
 		buffer->rows[r+1] = (char*) malloc(sizeof(char)*80);
-		buffer->rows[r+1][0] = '\0';
 		buffer->maxLengths[r+1] = 80;
 		buffer->lengths[r+1] = 0;
 		//count down
@@ -306,7 +307,7 @@ void destroyBuffer(struct Buffer* buffer)
 		{
 			// printf("freeing buffer->rows[%d]: %p\n", i, (buffer->rows)[i]);
 			// printf("\tbuffer contents:\n\t%s\n", buffer->rows[i]);
-			free(((buffer->rows)[i]));
+			free((buffer->rows)[i]);
 		}
 	}
 	free(buffer->rows);
