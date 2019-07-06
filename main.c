@@ -9,8 +9,8 @@
 #include "graphics/include/bmploader.h"
 #include "graphics/include/font.h"
 
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 480
+#define SCREEN_WIDTH 1120
+#define SCREEN_HEIGHT 560
 
 SDL_Window* init();
 void renderBufferToTerminal(struct Buffer* buffer);
@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 		0x00ff0000, //gmask
 		0x0000ff00, //bmask
 		0x000000ff  //amask
-		);
+	);
 	SDL_SetWindowIcon(window, logoSurface);
 	//end window creation
 

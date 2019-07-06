@@ -55,10 +55,11 @@ struct Buffer* createBuffer(const char* fileName)
 	char c = fgetc(buffer->file);
 	while (c != EOF)
 	{
-		if (tempLine[i-1] == '\n')
+		if (c == '\n')
 		{
-			buffer->rows[r] = (char*) malloc(sizeof(char) * i);
-			buffer->maxLengths[r] = i;
+			//allocate 80 chars per line no matter what, we will resize if it goes over.s
+			buffer->rows[r] = (char*) malloc(sizeof(char) * 80);
+			buffer->maxLengths[r] = 80;
 			buffer->lengths[r] = i;
 			int x = 0;
 			for(; x < i; x++)
@@ -68,15 +69,18 @@ struct Buffer* createBuffer(const char* fileName)
 
 			r++;
 			i = 0;
-		}
 
-		tempLine[i] = c;
+		}
+		else
+		{
+			tempLine[i] = c;
+			i++;
+		}
 		c = fgetc(buffer->file);
-		i++;
 	}
 	//grab the last line of the file
-	buffer->rows[r] = (char*) malloc(sizeof(char) * i);
-	buffer->maxLengths[r] = i;
+	buffer->rows[r] = (char*) malloc(sizeof(char) * 80);
+	buffer->maxLengths[r] = 80;
 	buffer->lengths[r] = i;
 	int x = 0;
 	for(; x < i; x++)
