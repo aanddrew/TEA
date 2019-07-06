@@ -9,7 +9,7 @@ CC = gcc
 COMPILER_FLAGS = -g -std=c99
 
 #the libraries we're linking against
-LINKER_FLAGS = -lSDL2 -lGL -lGLEW
+LINKER_FLAGS = -lSDL2
 
 #the name of our executable
 OBJ_NAME = tea
