@@ -28,6 +28,7 @@ bool deleteRow(struct Buffer* buffer, int r);
 bool backspace(struct Buffer* buffer, int r, int c);
 bool del(struct Buffer* buffer, int r, int c);
 
+void saveBuffer(struct Buffer* buffer);
 void destroyBuffer(struct Buffer* buffer);
 
 #endif

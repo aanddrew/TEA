@@ -23,7 +23,11 @@ struct Buffer* createBuffer(const char* fileName)
 {
 	struct Buffer* buffer = (struct Buffer*) (malloc(sizeof(struct Buffer) * 1));
 
-	buffer->file = fopen(fileName, "rw");
+	buffer->file = fopen(fileName, "r+");
+	if (buffer->file == NULL)
+	{
+		buffer->file = fopen(fileName, "w");
+	}
 	buffer->fileName = (char*)(malloc(sizeof(char) * (strlen(fileName) + 1)));
 	strcpy(buffer->fileName, fileName);
 
@@ -224,14 +228,18 @@ bool backspace(struct Buffer* buffer, int r, int c)
 	}
 	else
 	{
-		del(buffer, r, c);
+		for(int i = c - 1; i < buffer->lengths[r] - 1; i++)
+		{
+			buffer->rows[r][i] = buffer->rows[r][i+1];
+		}
+		buffer->lengths[r]--;
 		return true;
 	}
 }
 bool del(struct Buffer* buffer, int r, int c)
 {
 	//at the end of the line
-	if (c >= buffer->lengths[r] - 1)
+	if (c >= buffer->lengths[r])
 	{
 		return false;
 	}
@@ -243,13 +251,28 @@ bool del(struct Buffer* buffer, int r, int c)
 			continue;
 		buffer->rows[r][i] = buffer->rows[r][i+1];
 	}
-	
+
 	buffer->lengths[r]--;
 	return true;
 }
 
+void saveBuffer(struct Buffer* buffer)
+{
+	fclose(buffer->file);
+	buffer->file = fopen(buffer->fileName, "w");
+	for(int r = 0; r < buffer->numRows; r++)
+	{
+		for (int c = 0; c < buffer->lengths[r]; c++)
+		{
+			fprintf(buffer->file, "%c", buffer->rows[r][c]);
+		}
+		fprintf(buffer->file, "\n");
+	}
+}
+
 void destroyBuffer(struct Buffer* buffer)
 {
+	fclose(buffer->file);
 	for(int i = 0; i < buffer->maxRows; i++)
 	{
 		if ((buffer->rows)[i] != NULL)
@@ -264,6 +287,5 @@ void destroyBuffer(struct Buffer* buffer)
 	free(buffer->lengths);
 	free(buffer->maxLengths);
 
-	fclose(buffer->file);
 	free(buffer);
 }

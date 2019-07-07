@@ -214,7 +214,10 @@ int main(int argc, char** argv)
 	
 	free(logoPixels);
 	cleanUpFont();
+
+	saveBuffer(buffer);
 	destroyBuffer(buffer);
+	
 	SDL_FreeSurface(logoSurface);
 	SDL_DestroyWindow(window);
 
