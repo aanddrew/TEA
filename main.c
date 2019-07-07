@@ -9,11 +9,12 @@
 #include "graphics/include/bmploader.h"
 #include "graphics/include/font.h"
 
-#define SCREEN_WIDTH 1120
+//1120 is 80 characters wide
+#define SCREEN_WIDTH 1400
 #define SCREEN_HEIGHT 560
 
 SDL_Window* init();
-void renderBufferToTerminal(struct Buffer* buffer);
+void renderBufferToTerminal(struct Buffer* buffer, int cursorR, int cursorC);
 void renderBufferToRenderer(struct Buffer* buffer, SDL_Renderer* dst, 
 	int cursorR, int cursorC, int scrollRows, int scrollCols);
 
@@ -82,7 +83,12 @@ int main(int argc, char** argv)
 	printf("contents:\n");
 	for(int i = 0; i < buffer->numRows; i++)
 	{
-		printf("%s\n", buffer->rows[i]);
+		for(int k = 0; k < buffer->lengths[i]; k++)
+		{
+			putchar(buffer->rows[i][k]);
+		}
+		putchar('\n');
+		// printf("%s\n", buffer->rows[i]);
 	}
 
 	// char* windowTitle = strcat("TEA - ", buffer->fileName);
@@ -142,7 +148,7 @@ int main(int argc, char** argv)
 								if (cursorR != 0)
 								{
 									cursorR--;
-									cursorC = buffer->lengths[cursorR] - 1;
+									cursorC = buffer->lengths[cursorR];
 								}
 							}
 							else
@@ -151,7 +157,7 @@ int main(int argc, char** argv)
 							}
 						break;
 						case SDLK_RIGHT:
-							if (cursorC == buffer->lengths[cursorR] - 1)
+							if (cursorC == buffer->lengths[cursorR])
 							{
 								cursorR++;
 								cursorC = 0;
@@ -171,11 +177,11 @@ int main(int argc, char** argv)
 							}
 						break;
 						case SDLK_DOWN:
-							if (cursorR != buffer->maxRows - 1)
+							if (cursorR != buffer->numRows - 1)
 							{
 								cursorR++;
-								cursorC = (cursorC > buffer->lengths[cursorR] - 1 ?
-									buffer->lengths[cursorR] - 1 :
+								cursorC = (cursorC > buffer->lengths[cursorR] ?
+									buffer->lengths[cursorR]	 :
 									cursorC);
 							}
 						break;
@@ -198,7 +204,7 @@ int main(int argc, char** argv)
 		// glClear(GL_COLOR_BUFFER_BIT);
 
 		//rendering takes place here
-		// renderBufferToTerminal(buffer);
+		renderBufferToTerminal(buffer, cursorR, cursorC);
 		renderBufferToRenderer(buffer, windowRenderer, cursorR, cursorC, 0, 0);
 
 		// SDL_GL_SwapWindow(window);
@@ -277,19 +283,21 @@ void renderBufferToRenderer(struct Buffer* buffer, SDL_Renderer* dst,
 	}
 }
 
-void renderBufferToTerminal(struct Buffer* buffer)
+void renderBufferToTerminal(struct Buffer* buffer, int cursorR, int cursorC)
 {
 	printf("\033[2J"); // Clear screen
 	// printf("\f============\n");
-	printf("Num Rows: %d, Max Rows: %d\n", buffer->numRows, buffer->maxRows);
+	printf("Num Rows: %d, Max Rows: %d, r: %d, c: %d\n", 
+		buffer->numRows, buffer->maxRows, cursorR, cursorC);
 	for(int i = 0; i < buffer->numRows; i++)
 	{
-		printf("MAX_SIZE: %d , length: %d |", buffer->maxLengths[i], buffer->lengths[i]);
+		printf("MAX_SIZE: %d , length: %d, add %p |", 
+			buffer->maxLengths[i], buffer->lengths[i], buffer->rows[i]);
 		for(int k = 0; k < buffer->lengths[i]; k++)
 		{
-			printf("%c", buffer->rows[i][k]);
+			putchar(buffer->rows[i][k]);
 		}
-		printf("\n");
+		putchar('\n');
 	}
 
 }

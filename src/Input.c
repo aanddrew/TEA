@@ -57,6 +57,9 @@ char getCharFromSDLCode(int keycode, bool shift)
 			case SDLK_BACKQUOTE:
 				return '`';
 			break;
+			case SDLK_BACKSLASH:
+				return '\\';
+			break;
 		}
 	}
 	else//shift pressed
@@ -99,6 +102,9 @@ char getCharFromSDLCode(int keycode, bool shift)
 			break;
 			case SDLK_BACKQUOTE:
 				return '~';
+			break;
+			case SDLK_BACKSLASH:
+				return '|';
 			break;
 			//number keys
 			case SDLK_1:

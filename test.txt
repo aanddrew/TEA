@@ -1,5 +1,5 @@
-Hello this is some text.
-more text.
+Hello this is some text. And this line is really long it goes over 80 characters actually.
+more text. But this line is cool, it has exactly 80 characters as you can see it
 again.
 done
 

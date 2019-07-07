@@ -3,40 +3,51 @@
 #include <stdio.h>
 #include <string.h>
 
+//references
+// struct Buffer
+// {
+// 	FILE* file;
+// 	char* fileName;
+// 	// char* encoding;
+
+// 	//array of strings, not null terminated, lines end in 
+// 	char ** rows;
+// 	int numRows;
+// 	int maxRows;
+// 	int* lengths;
+// 	int* maxLengths;
+// 	//we will just hold the file in a big 2d array of strings
+// };
+
 struct Buffer* createBuffer(const char* fileName)
 {
-	struct Buffer* buffer = (struct Buffer*) malloc(sizeof(struct Buffer));
-	buffer->file = fopen(fileName, "r+");
-	//if file doesn't open, return null
-	if (buffer->file == NULL)
-		return NULL;
+	struct Buffer* buffer = (struct Buffer*) (malloc(sizeof(struct Buffer) * 1));
 
-	buffer->fileName = malloc(sizeof(char) * strlen(fileName));
-	//copy the fileName to our buffer object
+	buffer->file = fopen(fileName, "rw");
+	buffer->fileName = (char*)(malloc(sizeof(char) * (strlen(fileName) + 1)));
 	strcpy(buffer->fileName, fileName);
 
-	//calculate the max rows in the file
-	buffer->maxRows = 1; //double this if we go past it
+	//assume that each file has 1 row.
+	buffer->maxRows = 1;
 	{
-		//assume there is one line because the last line doesn't have \n char
 		int tempRows = 1;
 		char c = fgetc(buffer->file);
-		while (c != EOF)
+		while(c != EOF)
 		{
-			// printf("%c", c);
 			if (c == '\n')
 			{
 				tempRows++;
 			}
 			c = fgetc(buffer->file);
 		}
+
+		buffer->numRows = tempRows;
 		while(buffer->maxRows < tempRows)
 		{
 			buffer->maxRows *= 2;
 		}
+	}
 
-
-	}//end calculating rows.
 	buffer->rows = (char**) malloc(sizeof(char*) * buffer->maxRows);	
 	buffer->maxLengths = (int*) malloc(sizeof(int) * buffer->maxRows);
 	buffer->lengths = (int*) malloc(sizeof(int) * buffer->maxRows);
@@ -48,28 +59,42 @@ struct Buffer* createBuffer(const char* fileName)
 	//start over and let's fill our rows array
 	rewind(buffer->file);
 
-	//start by assuming the line is under 128 chars
-	char* tempLine = (char*) malloc(sizeof(char)* 128);
+	//start by assuming the line is under 80 chars
+	int sizeLine = 80;
+	char* tempLine = (char*) malloc(sizeof(char)* sizeLine);
 	int i = 0;
 	int r = 0;
 	char c = fgetc(buffer->file);
 	while (c != EOF)
 	{
+		if (i >= sizeLine)
+		{
+			sizeLine *= 2;
+			char* newTempLine = (char*) malloc(sizeof(char) * sizeLine);
+			for(int i = 0; i < sizeLine; i++)
+			{
+				newTempLine[i] = tempLine[i];
+			}
+			free(tempLine);
+			tempLine = newTempLine;
+		}
+
 		if (c == '\n')
 		{
-			//allocate 80 chars per line no matter what, we will resize if it goes over.s
-			buffer->rows[r] = (char*) malloc(sizeof(char) * 80);
-			buffer->maxLengths[r] = 80;
-			buffer->lengths[r] = i;
-			int x = 0;
-			for(; x < i; x++)
+			int sizeBufferLine = 80;
+			while(sizeBufferLine < i)
 			{
-				buffer->rows[r][x] = tempLine[x];
+				sizeBufferLine*= 2;
 			}
-
-			r++;
+			buffer->rows[r] = (char*) (malloc(sizeof(char)* sizeBufferLine));
+			for(int k = 0; k < i; k++)
+			{
+				buffer->rows[r][k] = tempLine[k];
+			}
+			buffer->maxLengths[r] = sizeBufferLine;
+			buffer->lengths[r] = i;
 			i = 0;
-
+			r++;
 		}
 		else
 		{
@@ -78,229 +103,149 @@ struct Buffer* createBuffer(const char* fileName)
 		}
 		c = fgetc(buffer->file);
 	}
-	//grab the last line of the file
-	buffer->rows[r] = (char*) malloc(sizeof(char) * 80);
-	buffer->maxLengths[r] = 80;
-	buffer->lengths[r] = i;
-	int x = 0;
-	for(; x < i; x++)
+
+	int sizeBufferLine = 80;
+	while(sizeBufferLine < i)
 	{
-		buffer->rows[r][x] = tempLine[x];
+		sizeBufferLine*= 2;
 	}
+	buffer->rows[r] = (char*) (malloc(sizeof(char)* sizeBufferLine));
+	for(int k = 0; k < i; k++)
+	{
+		buffer->rows[r][k] = tempLine[k];
+	}
+	buffer->maxLengths[r] = sizeBufferLine;
+	buffer->lengths[r] = i;
+	i = 0;
 	r++;
-
-	buffer->numRows = r;
-
-	free(tempLine);
-
-	// printf("max rows: %d\n", buffer->maxRows);
 
 	return buffer;
 }
 
-//returns true if the start is greater than 0 and less than the strlen(string)
-bool shiftStringBackward(char* string, int start, int length)
-{
-	// int len = strlen(string);
-	if (start == 0 || start > length)
-		return false;
-
-	for(int i = start-1; i < length; i++)
-	{
-		string[i] = string[i+1];
-		//this will bring the null character backwards too
-	}
-	return true;
-}
-
-bool deleteFromString(char* string, int start, int length)
-{
-	// int len = strlen(string);
-	if (start >= length + 1 || length == 0)
-		return false;
-
-	for(int i = start-1; i < length; i++)
-	{
-		string[i] = string[i+1];
-		//this will bring the null character backwards too
-	}
-	return true;
-}
-
-//helper function returns the new max length of the string
-int shiftStringForward(char** string, int maxLength, int start)
-{
-	int newMaxLength = maxLength;
-	int size = strlen(*string);
-
-	if (start > size+1)
-		return -1;
-
-	if (strlen(*string) + 1 >= newMaxLength)
-	{
-		newMaxLength *= 2;
-		char* newString = (char*) malloc(sizeof(char) * newMaxLength);
-
-		//we'll just handle it here
-		for(int i = 0; i < start; i++)
-		{
-			newString[i] = (*string)[i];
-		}
-		//fill the gaps in with spaces
-		for(int i = start; i < start + 1; i++)
-		{
-			newString[i] = ' ';
-		}
-		//then we put the rest at the end
-		int i = start;
-		for(; i <= size; i++)
-		{
-			newString[i + 1] = (*string)[i];
-		}
-
-		//remove the old one
-		free(*string);
-		*string = newString;	
-	}
-	//we don't have to reallocate memory
-	else
-	{
-		for(int i = size-1; i >= start; i--)
-		{
-			(*string)[i+1] = (*string)[i];
-		}
-		(*string)[start] = ' ';
-	}
-
-	return newMaxLength;
-}
-
+//manipulation of buffer
 bool insertIntoBuffer(struct Buffer* buffer, int r, int c, char inserted)
-{	
-	if (r >= buffer->maxRows)
+{
+	bool resized = false;
+	//we are only inserting one character into buffer->rows[r];
+	if (buffer->lengths[r] >= buffer->maxLengths[r])
 	{
-		return false;
-	}
-
-	if (buffer->rows[r] == NULL)
-	{
-		buffer->rows[r] = (char*) malloc(sizeof(char) * 80);
-		for(int i = 0; i < c; i++)
+		int newMaxLength = buffer->maxLengths[r] * 2;
+		char* newRow = (char*) (malloc(sizeof(char) * newMaxLength));
+		//copy chars to a new string
+		for(int i = 0; i < buffer->lengths[r]; i++)
 		{
-			buffer->rows[r][i] = ' ';
+			newRow[i] = buffer->rows[r][i];
 		}
+		//free it and re-assign to the new string
+		free(buffer->rows[r]);
+		buffer->rows[r] = newRow;
+		buffer->maxLengths[r] = newMaxLength;
 
-		buffer->rows[r][c] = inserted;
+		resized = true;
 	}
-	else
+	//now that it has been resized we are ready to rock and roll.
+	//we have to create a space at r, c to insert the character.
+	for(int i = buffer->lengths[r]; i > c; i--)
 	{
-		buffer->maxLengths[r] = 
-			shiftStringForward(&(buffer->rows[r]), buffer->maxLengths[r], c);
-		buffer->rows[r][c] = inserted;
+		buffer->rows[r][i] = buffer->rows[r][i-1];
 	}
-
+	//now we just insert it in the right place. easy as pie
+	buffer->rows[r][c] = inserted;
 	buffer->lengths[r]++;
-	return true;
+
+	return resized;
 }
 
-bool backspace(struct Buffer* buffer, int r, int c)
+bool addRow(struct Buffer* buffer, int r)
 {
-	if (shiftStringBackward(buffer->rows[r], c, buffer->lengths[r]))
-	{
-		buffer->lengths[r]--;
-		return true;
-	}
-	return false;
-}
+	bool resized = false;
 
-bool del(struct Buffer* buffer, int r, int c)
-{
-	if (deleteFromString(buffer->rows[r], c, buffer->lengths[r]))
+	//minus 1 because if we add a row at row 7 with 8 max rows, we have to resize
+	if (r >= buffer->maxRows - 1 || buffer->numRows == buffer->maxRows 	)
 	{
-		buffer->lengths[r]--;
-		return true;
-	}
-	return false;
-}
+		int newMaxRows = buffer->maxRows * 2;
+		char** newRows = (char**) (malloc(sizeof(char*) * newMaxRows));
+		int* newLengths = (int*) (malloc(sizeof(int) * newMaxRows));
+		int* newMaxLengths = (int*) (malloc(sizeof(int) * newMaxRows));
+		//init this to null
+		for(int i = 0; i < newMaxRows; i++)
+		{
+			newRows[i] = NULL;
+			newLengths[i] = 0;
+			newMaxLengths[i] = 0;
+		}
+		//copy our rows array to the new one
+		for(int i = 0; i < buffer->numRows; i++)
+		{
+			newRows[i] = buffer->rows[i];
+			newLengths[i] = buffer->lengths[i];
+			newMaxLengths[i] = buffer->maxLengths[i];
+		}
+		//trash old one
+		free(buffer->rows);
+		free(buffer->lengths);
+		free(buffer->maxLengths);
+		//give it our new, resized array
+		buffer->rows = newRows;
+		buffer->lengths = newLengths;
+		buffer->maxLengths = newMaxLengths;
 
+		buffer->maxRows = newMaxRows;
+
+		resized = true;
+	}
+
+	//now we do something similar to the insertIntoBuffer
+	for(int i = buffer->numRows; i > r; i--)
+	{
+		buffer->rows[i] = buffer->rows[i-1];
+		buffer->lengths[i] = buffer->lengths[i-1];
+		buffer->maxLengths[i] = buffer->maxLengths[i-1];
+	}
+
+	//now we can add something new at buffer->rows[r], a new 80 char line
+	buffer->rows[r] = (char*) (malloc(sizeof(char) * 80));
+	buffer->lengths[r] = 0;
+	buffer->maxLengths[r] = 80;
+	buffer->numRows++;
+
+	return resized;
+}
 bool deleteRow(struct Buffer* buffer, int r)
 {
 
 }
 
-// void shiftRowsUp(struct Buffer* buffer, int r)
-// {
-
-// }
-
-//adds a row after the current row, returns true if the buffer was resized
-bool addRow(struct Buffer* buffer, int r)
+bool backspace(struct Buffer* buffer, int r, int c)
 {
-	bool resized = false;
-	int newMaxRows = buffer->maxRows;
-	if (buffer->numRows >= buffer->maxRows)
+	if (c == 0)
 	{
-		//resize the buffer
-		newMaxRows *= 2;
-		char** copyOfOldRows = buffer->rows;
-
-		buffer->rows = (char**) malloc(sizeof(char*) * newMaxRows);
-
-		printf("old %p, rows %p\n", copyOfOldRows, buffer->rows);
-
-		//count up
-		for(int i = 0; i < r+1; i++)
-		{
-			buffer->rows[i] = copyOfOldRows[i];
-		}
-		//in the middle
-		buffer->rows[r+1] = (char*) malloc(sizeof(char)*80);
-		//count down
-		for(int i = buffer->numRows; i > r+1; i--)
-		{
-			buffer->rows[i] = copyOfOldRows[i-1];
-			buffer->maxLengths[i] = buffer->maxLengths[i-1];
-			buffer->lengths[i] = buffer->lengths[i-1];
-		}
-
-		buffer->maxLengths[r+1] = 80;
-		buffer->lengths[r+1] = 0;
-
-		buffer->numRows++;
-		buffer->maxRows = newMaxRows;
-		resized = true;
+		return false;
 	}
 	else
 	{
-		char** copyOfOldRows = buffer->rows;
-
-		buffer->rows = (char**) malloc(sizeof(char*) * newMaxRows);
-
-		//count up
-		for(int i = 0; i < r+1; i++)
-		{
-			buffer->rows[i] = copyOfOldRows[i];
-		}
-		//in the middle
-		buffer->rows[r+1] = (char*) malloc(sizeof(char)*80);
-		//count down
-		for(int i = buffer->numRows; i > r+1; i--)
-		{
-			buffer->rows[i] = copyOfOldRows[i-1];
-			buffer->maxLengths[i] = buffer->maxLengths[i-1];
-			buffer->lengths[i] = buffer->lengths[i-1];
-		}
-
-		buffer->maxLengths[r+1] = 80;
-		buffer->lengths[r+1] = 0;
-
-		buffer->numRows++;
+		del(buffer, r, c);
+		return true;
 	}
-
-	for(int i = buffer->numRows; i < buffer->maxRows; i++)
+}
+bool del(struct Buffer* buffer, int r, int c)
+{
+	//at the end of the line
+	if (c >= buffer->lengths[r] - 1)
 	{
-		buffer->rows[i] = NULL;
+		return false;
 	}
+
+	for(int i = c - 1; i < buffer->lengths[r] - 1; i++)
+	{
+		//don't overstep your bounds
+		if (i == -1)
+			continue;
+		buffer->rows[r][i] = buffer->rows[r][i+1];
+	}
+	
+	buffer->lengths[r]--;
+	return true;
 }
 
 void destroyBuffer(struct Buffer* buffer)
