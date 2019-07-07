@@ -199,6 +199,7 @@ int main(int argc, char** argv)
 			}
 		}
 		//render loop
+		SDL_SetRenderDrawColor(windowRenderer, 25, 25, 50, 255);
 		SDL_RenderClear(windowRenderer);
 		// glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 		// glClear(GL_COLOR_BUFFER_BIT);
@@ -217,7 +218,7 @@ int main(int argc, char** argv)
 
 	saveBuffer(buffer);
 	destroyBuffer(buffer);
-	
+
 	SDL_FreeSurface(logoSurface);
 	SDL_DestroyWindow(window);
 
