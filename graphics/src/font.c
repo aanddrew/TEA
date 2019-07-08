@@ -33,9 +33,9 @@ void initFont()
 		);
 }
 
+//these have to do with the font texture image
 #define CHAR_WIDTH 14
 #define CHAR_HEIGHT 18
-
 #define NUM_CHARS_PER_ROW 18
 
 //the characters are all 14x18 (WxH)

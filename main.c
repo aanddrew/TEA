@@ -138,7 +138,7 @@ int main(int argc, char** argv)
 							del(buffer, cursorR, cursorC+1);
 						break;
 						case SDLK_RETURN:
-							addRow(buffer, cursorR);
+							addRow(buffer, cursorR + 1);
 							cursorR++;
 							cursorC = 0;
 						break;
