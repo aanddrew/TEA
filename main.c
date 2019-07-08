@@ -44,6 +44,7 @@ int main(int argc, char** argv)
 
 	printf("icon is %ux%u\n", logoWidth, logoHeight);
 
+	//change this to customize font colors
 	SDL_Surface* logoSurface = SDL_CreateRGBSurfaceFrom(
 		logoPixels,
 		logoWidth,
@@ -200,7 +201,7 @@ int main(int argc, char** argv)
 		//render loop
 		SDL_SetRenderDrawColor(windowRenderer, 25, 25, 50, 255);
 		SDL_RenderClear(windowRenderer);
-		
+
 		//rendering takes place here
 		// renderBufferToTerminal(buffer, cursorR, cursorC);
 		renderBufferToRenderer(buffer, windowRenderer, cursorR, cursorC, 0, 0);
