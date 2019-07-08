@@ -58,7 +58,6 @@ int main(int argc, char** argv)
 	SDL_SetWindowIcon(window, logoSurface);
 	//end window creation
 
-	SDL_Surface* windowSurface = SDL_GetWindowSurface(window);
 	SDL_Renderer* windowRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
 
 	//load fonts
@@ -201,11 +200,9 @@ int main(int argc, char** argv)
 		//render loop
 		SDL_SetRenderDrawColor(windowRenderer, 25, 25, 50, 255);
 		SDL_RenderClear(windowRenderer);
-		// glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
-		// glClear(GL_COLOR_BUFFER_BIT);
-
+		
 		//rendering takes place here
-		renderBufferToTerminal(buffer, cursorR, cursorC);
+		// renderBufferToTerminal(buffer, cursorR, cursorC);
 		renderBufferToRenderer(buffer, windowRenderer, cursorR, cursorC, 0, 0);
 
 		// SDL_GL_SwapWindow(window);
@@ -234,14 +231,6 @@ SDL_Window* init()
 		return NULL;
 	}
 
-	// SDL_GL_SetSwapInterval(1);
-
-	// SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_CORE);
-	// SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,3);
-	// SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,3);
-
-	// SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
 	SDL_Window* window = SDL_CreateWindow
 	(
 		"tea", 
@@ -249,14 +238,8 @@ SDL_Window* init()
 		0, 
 		SCREEN_WIDTH, 
 		SCREEN_HEIGHT, 
-		SDL_WINDOW_OPENGL
+		0
 	);
-
-	// SDL_GLContext context = SDL_GL_CreateContext(window);
-
-	//this is critical, seg fault happens without it
-	// glewExperimental = GL_TRUE; 
-	// glewInit();
 
 	return window;
 }
