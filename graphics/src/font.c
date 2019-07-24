@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 // #include "../include/shader.h"
 
@@ -17,7 +18,7 @@
 
 void initFont()
 {
-	fontPixels = loadbmp("res/default_font.bmp", &fontWidth, &fontHeight);
+	fontPixels = loadbmp("res/default/default_font.bmp", &fontWidth, &fontHeight);
 	fixPixelsForSDL(fontPixels, fontWidth, fontHeight);
 
 	fontSurface = SDL_CreateRGBSurfaceFrom(
@@ -34,8 +35,6 @@ void initFont()
 }
 
 //these have to do with the font texture image
-#define CHAR_WIDTH 14
-#define CHAR_HEIGHT 18
 #define NUM_CHARS_PER_ROW 18
 
 //the characters are all 14x18 (WxH)
@@ -50,7 +49,7 @@ int getXYForChar(char letter, int* x, int* y)
 	return 1;
 }
 
-void drawGlyph(char letter, int r, int c, SDL_Renderer* dst)
+void drawGlyph(char letter, int y, int x, SDL_Renderer* dst)
 {
 	if (fontTexture == NULL)
 	{
@@ -64,8 +63,10 @@ void drawGlyph(char letter, int r, int c, SDL_Renderer* dst)
 		return;
 	}
 
-	int outX = c * CHAR_WIDTH;
-	int outY = r * CHAR_HEIGHT;
+	// int outX = x * CHAR_WIDTH;
+	// int outY = y * CHAR_HEIGHT;
+	int outX = x;
+	int outY = y;
 
 	SDL_Rect fontRect;
 	fontRect.x = fontX;
@@ -80,6 +81,14 @@ void drawGlyph(char letter, int r, int c, SDL_Renderer* dst)
 	outRect.h = CHAR_HEIGHT;
 
 	SDL_RenderCopy(dst, fontTexture, &fontRect, &outRect);
+}
+
+void drawString(const char* string, int y, int x, SDL_Renderer* dst)
+{
+	for(int i = 0; i < strlen(string); i++)
+	{
+		drawGlyph(string[i], y, x + i*CHAR_WIDTH, dst);
+	}
 }
 
 void cleanUpFont()
