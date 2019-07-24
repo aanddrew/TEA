@@ -6,6 +6,10 @@
 
 #include <SDL2/SDL.h>
 
+//this has to do with the font bmp texture
+#define CHAR_WIDTH 14
+#define CHAR_HEIGHT 18
+
 static unsigned char* fontPixels;
 static unsigned int fontWidth;
 static unsigned int fontHeight;
@@ -20,7 +24,9 @@ SDL_Surface* glpyhSurface;
 void initFont();
 void cleanUpFont();
 
-void drawGlyph(char letter, int r, int c, SDL_Renderer* dst);
+void drawGlyph(char letter, int y, int x, SDL_Renderer* dst);
+
+void drawString(const char* string, int y, int x, SDL_Renderer* dst);
 
 void dispTexture();
 

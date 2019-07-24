@@ -14,6 +14,7 @@
 #define SCREEN_HEIGHT 560
 
 SDL_Window* init();
+void handleKeyInput(struct Buffer* buffer, SDL_Event* e, int cursorR, int cursorC, 	bool shift);
 void renderBufferToTerminal(struct Buffer* buffer, int cursorR, int cursorC);
 void renderBufferToRenderer(struct Buffer* buffer, SDL_Renderer* dst, 
 	int cursorR, int cursorC, int scrollRows, int scrollCols);
@@ -39,7 +40,7 @@ int main(int argc, char** argv)
 	}
 	//give it an icon
 	unsigned int logoWidth, logoHeight;
-	unsigned char* logoPixels = loadbmp("res/icon_256.bmp", &logoWidth, &logoHeight);
+	unsigned char* logoPixels = loadbmp("res/default/icon_256.bmp", &logoWidth, &logoHeight);
 	fixPixelsForSDL(logoPixels, logoWidth, logoHeight);
 
 	printf("icon is %ux%u\n", logoWidth, logoHeight);
@@ -113,26 +114,43 @@ int main(int argc, char** argv)
 				case SDL_QUIT:
 					done = 1;
 				break;
-				//keydown
+			}
+
+			//regular typing event appens here
+			switch(e.type)
+			{
 				case SDL_KEYDOWN:
 				{
 					int keyCode = e.key.keysym.sym;
-					if(keyCode == SDLK_LSHIFT 
-						||keyCode == SDLK_RSHIFT)
-					{
-						shift = true;
-					}
 					char c = getCharFromSDLCode(keyCode, shift);
 					if (c != '\0')
 					{
 						insertIntoBuffer(buffer, cursorR, cursorC++, c);
 					}
-
 					switch(keyCode)
 					{
 						case SDLK_BACKSPACE:
-							if(backspace(buffer, cursorR, cursorC))
+						{
+							int x = -1;
+							if (cursorR != 0)
+							x = buffer->lengths[cursorR - 1];
+							bool result = backspace(buffer, cursorR, cursorC);
+							if (cursorR == 0)
+								break;
+								if(result)
 								cursorC--;
+							else
+							{
+								cursorR--;
+								cursorC = x;
+							}
+						}
+							// else
+							// {
+							// 	// deleteRow(buffer, cursorR);
+							// 	// if (cursorR != 0)
+							// 	// 	cursorR --;
+							// }
 						break;
 						case SDLK_DELETE:
 							del(buffer, cursorR, cursorC+1);
@@ -180,23 +198,36 @@ int main(int argc, char** argv)
 							if (cursorR != buffer->numRows - 1)
 							{
 								cursorR++;
-								cursorC = (cursorC > buffer->lengths[cursorR] ?
-									buffer->lengths[cursorR]	 :
-									cursorC);
+								cursorC = 
+								(cursorC > buffer->lengths[cursorR] ? buffer->lengths[cursorR] : cursorC);
 							}
 						break;
+						case SDLK_END:
+							cursorC = buffer->lengths[cursorR];
+						break;
+						case SDLK_HOME:
+							cursorC = 0;
+						break;
+					
 					}
+					if(e.key.keysym.sym == SDLK_LSHIFT 
+						||e.key.keysym.sym== SDLK_RSHIFT)
+					{
+						shift = true;
+					}
+					
 				}
 				break;
 				//keyup
 				case SDL_KEYUP:
-				if(e.key.keysym.sym == SDLK_LSHIFT ||
-						e.key.keysym.sym == SDLK_RSHIFT)
-				{
-					shift = false;
-				}
+					if(e.key.keysym.sym == SDLK_LSHIFT ||
+							e.key.keysym.sym == SDLK_RSHIFT)
+					{
+						shift = false;
+					}
 				break;
 			}
+
 		}
 		//render loop
 		SDL_SetRenderDrawColor(windowRenderer, 25, 25, 50, 255);
@@ -245,10 +276,11 @@ SDL_Window* init()
 	return window;
 }
 
+
 void renderBufferToRenderer(struct Buffer* buffer, SDL_Renderer* dst, 
 	int cursorR, int cursorC, int scrollRows, int scrollCols)
 {
-	static const int BLINK_LENGTH = 30;
+	static const int BLINK_LENGTH = 60;
 	static int numTicks = 0;
 	if (numTicks > BLINK_LENGTH)
 		numTicks = 0;
@@ -257,18 +289,47 @@ void renderBufferToRenderer(struct Buffer* buffer, SDL_Renderer* dst,
 
 	// printf("%d, %d\n", buffer->numRows, buffer->maxRows);
 
+	if (numTicks <= BLINK_LENGTH/2)
+	{
+		SDL_Rect cursor;
+		cursor.x = cursorC * CHAR_WIDTH;
+		cursor.y = cursorR * CHAR_HEIGHT;
+		cursor.w = CHAR_WIDTH;
+		cursor.h = CHAR_HEIGHT;
+		SDL_SetRenderDrawBlendMode(dst, SDL_BLENDMODE_BLEND);
+		int alpha = (int)(((float)numTicks)/((float)BLINK_LENGTH) * BLINK_LENGTH * 180);
+		SDL_SetRenderDrawColor(dst, 255, 255, 255, alpha);
+
+		SDL_RenderFillRect(dst, &cursor);
+	}
+
 	for(unsigned int r = 0; r < buffer->numRows; r++)
 	{
 		for(unsigned int c = 0; c < buffer->lengths[r]; c++)
 		{
-			drawGlyph(buffer->rows[r][c], r, c, dst);
+			drawGlyph(buffer->rows[r][c], r*CHAR_HEIGHT, c*CHAR_WIDTH, dst);
 		}
 	}
 
-	if (numTicks <= BLINK_LENGTH/2)
-	{
-		drawGlyph('_', cursorR, cursorC, dst);
-	}
+	// if (numTicks <= BLINK_LENGTH/2)
+	// {
+	// 	drawGlyph('_', cursorR * CHAR_HEIGHT, cursorC * CHAR_WIDTH, dst);
+	// }
+
+	//draw a nice box at the bottom
+	SDL_SetRenderDrawColor(dst, 50, 50, 100, 255);
+	SDL_Rect bar;
+	bar.x = 0;
+	bar.y = SCREEN_HEIGHT - CHAR_HEIGHT;
+	bar.w = SCREEN_WIDTH;
+	bar.h = CHAR_HEIGHT;
+	SDL_RenderFillRect(dst, &bar);
+
+	// drawGlyph('r', bar.y, 0*CHAR_WIDTH, dst);
+	// drawGlyph(':', bar.y, 1*CHAR_WIDTH, dst);
+	char string[80];
+	sprintf(string, "r: %d c: %d", cursorR, cursorC);
+	drawString(string, bar.y, 0, dst);
 }
 
 void renderBufferToTerminal(struct Buffer* buffer, int cursorR, int cursorC)

@@ -217,13 +217,59 @@ bool addRow(struct Buffer* buffer, int r)
 }
 bool deleteRow(struct Buffer* buffer, int r)
 {
+	if (buffer->numRows == 1 && r == 0)
+		return false;
 
+	char* currentPointer = buffer->rows[r];
+	//shift it all backwards
+	bool shifted = false;
+	for(int i = r; i < buffer->numRows - 1; i++)
+	{
+		buffer->rows[i] = buffer->rows[i+1];
+		buffer->lengths[i] = buffer->lengths[i+1];
+		buffer->maxLengths[i] = buffer->maxLengths[i+1];
+		shifted = true;
+	}
+	buffer->rows[buffer->numRows] = NULL;
+
+	if (!shifted)
+	{
+		buffer->rows[r] = NULL;
+	}
+
+	buffer->numRows--;
+	buffer->rows[buffer->maxRows - 1] = NULL; 
+	buffer->rows[buffer->numRows] = NULL;
+	// buffer->lengths[buffer->maxRows - 1] = NULL;
+
+	printf("freeing\n");
+	free(currentPointer);
+
+	return true;
 }
 
 bool backspace(struct Buffer* buffer, int r, int c)
 {
 	if (c == 0)
 	{
+		if (r == 0)
+			return false;
+
+		if (buffer->lengths[r] + buffer->lengths[r-1] >= buffer->maxLengths[r-1])
+		{
+			//we have to do a resize
+			return false;
+		}
+		//then we strcat them to gether
+		int x = 0;
+		for(int i = buffer->lengths[r-1]; i < buffer->lengths[r-1] + buffer->lengths[r]; i++)
+		{
+			buffer->rows[r-1][i] = buffer->rows[r][x];
+			x++;
+		}
+		buffer->lengths[r-1] = buffer->lengths[r-1] + buffer->lengths[r];
+		deleteRow(buffer, r);
+		//this is where we move the line back up to the previous line
 		return false;
 	}
 	else
@@ -239,7 +285,7 @@ bool backspace(struct Buffer* buffer, int r, int c)
 bool del(struct Buffer* buffer, int r, int c)
 {
 	//at the end of the line
-	if (c >= buffer->lengths[r])
+	if (c > buffer->lengths[r])
 	{
 		return false;
 	}
@@ -275,6 +321,7 @@ void destroyBuffer(struct Buffer* buffer)
 	fclose(buffer->file);
 	for(int i = 0; i < buffer->maxRows; i++)
 	{
+		//printf("%d: %p\n", i, buffer->rows[i]);
 		if ((buffer->rows)[i] != NULL)
 		{
 			// printf("freeing buffer->rows[%d]: %p\n", i, (buffer->rows)[i]);
