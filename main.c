@@ -2,7 +2,6 @@
 #include <time.h>
 
 #include <SDL2/SDL.h>
-#include <GL/glew.h>
 
 #include "include/Buffer.h"
 #include "include/Input.h"
@@ -43,7 +42,6 @@ int main(int argc, char** argv)
 	unsigned char* logoPixels = loadbmp("res/default/icon_256.bmp", &logoWidth, &logoHeight);
 	fixPixelsForSDL(logoPixels, logoWidth, logoHeight);
 
-	printf("icon is %ux%u\n", logoWidth, logoHeight);
 
 	//change this to customize font colors
 	SDL_Surface* logoSurface = SDL_CreateRGBSurfaceFrom(
@@ -79,18 +77,6 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	printf("buffer info: \n");
-	printf("File: %s\n", buffer->fileName);
-	printf("contents:\n");
-	for(int i = 0; i < buffer->numRows; i++)
-	{
-		for(int k = 0; k < buffer->lengths[i]; k++)
-		{
-			putchar(buffer->rows[i][k]);
-		}
-		putchar('\n');
-		// printf("%s\n", buffer->rows[i]);
-	}
 
 	// char* windowTitle = strcat("TEA - ", buffer->fileName);
 	char windowTitle[80] = "tea - ";
@@ -287,7 +273,6 @@ void renderBufferToRenderer(struct Buffer* buffer, SDL_Renderer* dst,
 	else
 		numTicks++;
 
-	// printf("%d, %d\n", buffer->numRows, buffer->maxRows);
 
 	if (numTicks <= BLINK_LENGTH/2)
 	{

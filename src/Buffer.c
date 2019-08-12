@@ -242,7 +242,6 @@ bool deleteRow(struct Buffer* buffer, int r)
 	buffer->rows[buffer->numRows] = NULL;
 	// buffer->lengths[buffer->maxRows - 1] = NULL;
 
-	printf("freeing\n");
 	free(currentPointer);
 
 	return true;
@@ -321,11 +320,8 @@ void destroyBuffer(struct Buffer* buffer)
 	fclose(buffer->file);
 	for(int i = 0; i < buffer->maxRows; i++)
 	{
-		//printf("%d: %p\n", i, buffer->rows[i]);
 		if ((buffer->rows)[i] != NULL)
 		{
-			// printf("freeing buffer->rows[%d]: %p\n", i, (buffer->rows)[i]);
-			// printf("\tbuffer contents:\n\t%s\n", buffer->rows[i]);
 			free((buffer->rows)[i]);
 		}
 	}

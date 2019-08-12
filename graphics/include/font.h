@@ -1,7 +1,6 @@
 #ifndef BMPFONT_H
 #define BMPFONT_H
 
-#include "GL/glew.h"
 #include "bmploader.h"
 
 #include <SDL2/SDL.h>

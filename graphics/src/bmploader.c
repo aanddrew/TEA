@@ -47,7 +47,6 @@ unsigned char* loadbmp(const char* fileName, unsigned int* width, unsigned int* 
 	fseek(file, 10, SEEK_SET);
 	fread(&offset, 4, 1, file);
 
-	printf("offset is %u\n", offset);
 
 	fseek(file, offset, SEEK_SET);
 
@@ -55,7 +54,6 @@ unsigned char* loadbmp(const char* fileName, unsigned int* width, unsigned int* 
 	unsigned int BYTES_PER_PIXEL = 4; //32 bit color - rgba assumed
 	unsigned int SIZE_IMAGE_IN_BYTES = (*width) * (*height) * BYTES_PER_PIXEL;
 
-	printf("size image in bytes: %u\n", SIZE_IMAGE_IN_BYTES);
 
 	unsigned char* pixels = (unsigned char*)(malloc(SIZE_IMAGE_IN_BYTES));
 
